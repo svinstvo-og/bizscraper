@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: bizscraper
+
+google:
+  api:
+    key: ${GOOGLE_PLACES_API_KEY}
