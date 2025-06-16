@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+//@NoArgsConstructor
+//@AllArgsConstructor
 @Getter
 @Setter
 public class ScrapeRequest {
