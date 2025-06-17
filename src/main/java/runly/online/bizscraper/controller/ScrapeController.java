@@ -11,7 +11,7 @@ import runly.online.bizscraper.service.ScrapeService;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1.0/bizscraper")
+@RequestMapping("runly/api/v1.0/bizscraper")
 public class ScrapeController {
 
     private final ScrapeService scrapeService;

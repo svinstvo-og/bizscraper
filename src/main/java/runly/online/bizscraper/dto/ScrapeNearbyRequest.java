@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 public class ScrapeNearbyRequest {
     @JsonProperty("radius-km")
-    private int radiusKm;
+    private Double radiusKm;
     private double latitude;
     private double longitude;
     @JsonProperty("max-result-count")

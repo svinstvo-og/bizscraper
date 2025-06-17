@@ -12,15 +12,19 @@ import java.util.*;
 @Setter
 public class ScrapeRequest {
 
-    private List<String> inludedTypes;
+    private List<String> includedTypes;
     private int maxResultCount;
     private LocationRestriction locationRestriction;
 
-    public ScrapeRequest(double latitude, double longitude, int radius, List<String> types, int maxResultCount) {
-        this.inludedTypes = types;
+    public ScrapeRequest(double latitude, double longitude, Double radius, List<String> types, int maxResultCount) {
+        this.includedTypes = types;
         this.maxResultCount = maxResultCount;
 
-        this.locationRestriction = new LocationRestriction(new Center(latitude, longitude), radius);
+        Map<String, Double> circle = new HashMap<>();
+        circle.put("latitude", latitude);
+        circle.put("longitude", longitude);
+
+        this.locationRestriction = new LocationRestriction(new Circle(circle, radius));
     }
 }
 

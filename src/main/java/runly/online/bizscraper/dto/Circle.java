@@ -5,11 +5,13 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Data
 @AllArgsConstructor
 @Getter
 @Setter
-public class Center {
-    private double latitude;
-    private double longitude;
+public class Circle {
+    private Map<String, Double> center;
+    private Double radius;
 }

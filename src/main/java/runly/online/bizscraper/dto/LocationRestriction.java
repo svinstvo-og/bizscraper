@@ -8,6 +8,5 @@ import lombok.*;
 @Getter
 @Setter
 public class LocationRestriction {
-    private Center center;
-    private int radius;
+    private Circle circle;
 }
