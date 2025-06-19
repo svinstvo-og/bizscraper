@@ -24,8 +24,9 @@ repositories {
 }
 
 dependencies {
-	implementation group: 'com.google.maps', name: 'google-maps-services', version: '2.2.0'
+	//implementation group: 'com.google.maps', name: 'google-maps-services', version: '2.2.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', version: '3.2.0'
 	//implementation group: 'org.springframework', name: 'spring-web', version: '7.0.0-M6'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'

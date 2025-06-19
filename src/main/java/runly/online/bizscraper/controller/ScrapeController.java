@@ -25,7 +25,7 @@ public class ScrapeController {
         log.info("scrape request: {}, {} results", nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());
         ScrapeRequest request = new ScrapeRequest(nearbyRequest.getLatitude(), nearbyRequest.getLongitude(),
                 nearbyRequest.getRadiusKm()*1000, nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());
-        System.out.println(scrapeService.searchNearby(request));
+        scrapeService.searchNearby(request);
     }
 
 }
