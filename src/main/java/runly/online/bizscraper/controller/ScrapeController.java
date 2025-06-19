@@ -1,5 +1,6 @@
 package runly.online.bizscraper.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ public class ScrapeController {
     }
 
     @PostMapping("/scrape/nearby")
-    public void scrapeNearby(@RequestBody ScrapeNearbyRequest nearbyRequest) {
+    public void scrapeNearby(@RequestBody ScrapeNearbyRequest nearbyRequest) throws JsonProcessingException {
         log.info("scrape request: {}, {} results", nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());
         ScrapeRequest request = new ScrapeRequest(nearbyRequest.getLatitude(), nearbyRequest.getLongitude(),
                 nearbyRequest.getRadiusKm()*1000, nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());

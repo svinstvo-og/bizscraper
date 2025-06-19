@@ -10,9 +10,10 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScrapeLocationRequest {
+public class Place {
     private Map<String, String> displayName;
     private String websiteUri;
     private String googleMapsUri;
-    private List<Map<String, String>> addressComponents;
+    private List<String> types;
+    private List<AddressComponent> addressComponents;
 }
