@@ -5,6 +5,7 @@ package runly.online.bizscraper.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,9 +23,14 @@ public class Business {
     private String emailBody;
     private String country;
 
-    @OneToMany(mappedBy = "businesses")
-    private List<Idea> ideas;
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Idea> ideas = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "businesses")
+    @ManyToMany//(mappedBy = "businesses")
+    @JoinTable(
+            name = "business_business_type",
+            joinColumns = @JoinColumn(name = "business_id"),
+            inverseJoinColumns = @JoinColumn(name = "business_type_id")
+    )
     private List<BusinessType> types;
 }

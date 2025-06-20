@@ -3,6 +3,7 @@ package runly.online.bizscraper.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -12,6 +13,6 @@ public class BusinessType {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private String name;
-    @ManyToMany(mappedBy = "businesses")
-    private List<Business> businesses;
+    @ManyToMany(mappedBy = "types")
+    private List<Business> businesses = new ArrayList<>();
 }

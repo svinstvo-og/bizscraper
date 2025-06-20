@@ -11,5 +11,6 @@ public class Idea {
     private String title;
     private String description;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_id")
     private Business business;
 }

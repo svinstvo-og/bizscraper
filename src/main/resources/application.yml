@@ -5,6 +5,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/bizscraper
     username: postgres
     password: zxca
+  jpa:
+    properties:
+      hibernate:
+        entityManagerFactoryInterface: jakarta.persistence.EntityManagerFactory
 
 
 google:

@@ -5,10 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import runly.online.bizscraper.dto.Place;
 import runly.online.bizscraper.dto.ScrapeLocationResponse;
 import runly.online.bizscraper.dto.ScrapeRequest;
 import org.springframework.http.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -38,16 +41,24 @@ public class ScrapeService {
         return response;
     }
 
-    public void retrieveBusinessesFromResponse(ResponseEntity<String> response) throws JsonProcessingException {
+    private List<Place> retrieveBusinessesFromResponse(ResponseEntity<String> response) throws JsonProcessingException {
         if (response.getStatusCode().is2xxSuccessful()) {
             log.info("Got 200 response: {}", response.getBody());
             String body = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             ScrapeLocationResponse locationResponse = objectMapper.readValue(body, ScrapeLocationResponse.class);
-            System.out.println(locationResponse.getPlaces());
+            log.info("Mapped {} objects", locationResponse.getPlaces().size());
+            return locationResponse.getPlaces();
+            //System.out.println(locationResponse.getPlaces());
         }
         else {
             log.info("Got 500 response: {}", response.getBody());
         }
+        return null;
+    }
+
+    public void saveBusinesses(List<Place> places) {
+        log.info("Saving places...");
+
     }
 }
