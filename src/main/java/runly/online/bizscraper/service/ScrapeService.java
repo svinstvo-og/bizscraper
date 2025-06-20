@@ -2,6 +2,7 @@ package runly.online.bizscraper.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -10,6 +11,8 @@ import runly.online.bizscraper.dto.ScrapeLocationResponse;
 import runly.online.bizscraper.dto.ScrapeRequest;
 import org.springframework.http.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import runly.online.bizscraper.model.Business;
+import runly.online.bizscraper.repository.BusinessRepository;
 
 import java.util.List;
 
@@ -17,11 +20,18 @@ import java.util.List;
 @Service
 public class ScrapeService {
 
+    final
+    BusinessRepository businessRepository;
+
     @Value("${google.api.key}")
     private String API_KEY;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String BASE_URL = "https://places.googleapis.com/v1/places:searchNearby";
+
+    public ScrapeService(BusinessRepository businessRepository) {
+        this.businessRepository = businessRepository;
+    }
 
     public ResponseEntity<String> searchNearby(ScrapeRequest scrapeRequest) throws JsonProcessingException {
         System.out.println(scrapeRequest.getIncludedTypes());
@@ -36,7 +46,8 @@ public class ScrapeService {
 
         ResponseEntity<String> response = restTemplate.exchange(BASE_URL, HttpMethod.POST, requestEntity, String.class);
 
-        retrieveBusinessesFromResponse(response);
+        List<Place> places = retrieveBusinessesFromResponse(response);
+        saveBusinesses(places);
 
         return response;
     }
@@ -59,6 +70,11 @@ public class ScrapeService {
 
     public void saveBusinesses(List<Place> places) {
         log.info("Saving places...");
-
+        Business business;
+        for (Place place : places) {
+            business = new Business(place);
+            businessRepository.save(business);
+            log.info("Saved business: {}", place.getDisplayName().get("text"));
+        }
     }
 }

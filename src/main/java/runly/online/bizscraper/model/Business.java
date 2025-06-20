@@ -3,6 +3,7 @@ package runly.online.bizscraper.model;
 
 
 import jakarta.persistence.*;
+import runly.online.bizscraper.dto.Place;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ public class Business {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private String name;
-    private String url;
+    private String websiteUrl;
+    private String googleMapsUrl;
     private String email;
     private String status;
     private Boolean emailSent;
@@ -33,4 +35,13 @@ public class Business {
             inverseJoinColumns = @JoinColumn(name = "business_type_id")
     )
     private List<BusinessType> types;
+
+    public Business(Place place) {
+        this.name = place.getDisplayName().get("text");
+        this.websiteUrl = place.getWebsiteUri();
+        this.googleMapsUrl = place.getGoogleMapsUri();
+        this.status = "pending";
+        this.emailSent = false;
+        this.country = place.getAddressComponents().get(place.getAddressComponents().size()-2).getShortText();
+    }
 }
