@@ -3,7 +3,9 @@ package runly.online.bizscraper.model;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import runly.online.bizscraper.dto.Place;
 
@@ -15,6 +17,8 @@ import java.util.List;
 @Table(name = "businesses")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Business {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

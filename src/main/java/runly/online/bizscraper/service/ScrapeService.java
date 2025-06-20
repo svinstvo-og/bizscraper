@@ -17,9 +17,7 @@ import runly.online.bizscraper.model.Idea;
 import runly.online.bizscraper.repository.BusinessRepository;
 import runly.online.bizscraper.repository.BusinessTypeRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -76,7 +74,7 @@ public class ScrapeService {
         return null;
     }
 
-    public void saveBusinesses(List<Place> places) {
+    private void saveBusinesses(List<Place> places) {
         log.info("Saving places...");
         Business business;
         for (Place place : places) {
@@ -99,5 +97,23 @@ public class ScrapeService {
             businessRepository.save(business);
             log.info("Saved business: {}", place.getDisplayName().get("text"));
         }
+    }
+
+    public void deleteRepeatedBusinesses() {
+        log.info("Deleting repeated businesses...");
+        List<Business> businesses = businessRepository.findAll();
+        HashMap<String, String> uniqueBusinesses = new HashMap<>();
+        for (Business business : businesses) {
+            if (uniqueBusinesses.containsKey(business.getName())) {
+                if (business.getGoogleMapsUrl() == uniqueBusinesses.get(business.getName())) {
+                    log.info("Deleting repeated business: {}", business.getName());
+                    businessRepository.delete(business);
+                }
+            }
+            else {
+                uniqueBusinesses.put(business.getName(), business.getGoogleMapsUrl());
+            }
+        }
+        log.info("Deleted repeated businesses: {} deleted, {} initial, {} left", businesses.size() - uniqueBusinesses.size(), businesses.size(), uniqueBusinesses.size());
     }
 }
