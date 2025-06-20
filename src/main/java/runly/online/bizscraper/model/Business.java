@@ -3,6 +3,8 @@ package runly.online.bizscraper.model;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import runly.online.bizscraper.dto.Place;
 
 import java.time.LocalDateTime;
@@ -11,6 +13,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "businesses")
+@Getter
+@Setter
 public class Business {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

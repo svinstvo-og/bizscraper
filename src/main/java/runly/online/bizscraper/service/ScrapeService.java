@@ -12,9 +12,14 @@ import runly.online.bizscraper.dto.ScrapeRequest;
 import org.springframework.http.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import runly.online.bizscraper.model.Business;
+import runly.online.bizscraper.model.BusinessType;
+import runly.online.bizscraper.model.Idea;
 import runly.online.bizscraper.repository.BusinessRepository;
+import runly.online.bizscraper.repository.BusinessTypeRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -23,14 +28,17 @@ public class ScrapeService {
     final
     BusinessRepository businessRepository;
 
+    final BusinessTypeRepository businessTypeRepository;
+
     @Value("${google.api.key}")
     private String API_KEY;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String BASE_URL = "https://places.googleapis.com/v1/places:searchNearby";
 
-    public ScrapeService(BusinessRepository businessRepository) {
+    public ScrapeService(BusinessRepository businessRepository, BusinessTypeRepository businessTypeRepository) {
         this.businessRepository = businessRepository;
+        this.businessTypeRepository = businessTypeRepository;
     }
 
     public ResponseEntity<String> searchNearby(ScrapeRequest scrapeRequest) throws JsonProcessingException {
@@ -72,7 +80,22 @@ public class ScrapeService {
         log.info("Saving places...");
         Business business;
         for (Place place : places) {
+            List<BusinessType> types = new ArrayList<>();
             business = new Business(place);
+            for (String type : place.getTypes()) {
+                BusinessType businessType = businessTypeRepository.findByName(type);
+                if (businessType != null) {
+                    types.add(businessType);
+                }
+                else {
+                    log.info("Business type {} not found, creating one...", type);
+                    BusinessType newBusinessType = new BusinessType(type);
+                    types.add(newBusinessType);
+                    businessTypeRepository.save(newBusinessType);
+                }
+                business.setTypes(types);
+            }
+            log.info("Assigned {} types to {}", types.size(), business.getName());
             businessRepository.save(business);
             log.info("Saved business: {}", place.getDisplayName().get("text"));
         }
