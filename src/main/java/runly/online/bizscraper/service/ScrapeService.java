@@ -1,14 +1,13 @@
 package runly.online.bizscraper.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import runly.online.bizscraper.dto.Place;
-import runly.online.bizscraper.dto.ScrapeLocationResponse;
-import runly.online.bizscraper.dto.ScrapeRequest;
+import runly.online.bizscraper.dto.*;
 import org.springframework.http.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import runly.online.bizscraper.model.Business;
@@ -40,8 +39,10 @@ public class ScrapeService {
     }
 
     public ResponseEntity<String> searchNearby(ScrapeRequest scrapeRequest) throws JsonProcessingException {
-        System.out.println(scrapeRequest.getIncludedTypes());
         log.info("Adding headers to request: {}", API_KEY);
+        log.info("Scrape Requst: types = {}, max results = {}, circle center = {}, center coordinates = {},", scrapeRequest.getIncludedTypes(),
+                scrapeRequest.getMaxResultCount(), scrapeRequest.getLocationRestriction().getCircle().getCenter(),
+                scrapeRequest.getLocationRestriction().getCircle().getCenter().toString());
         HttpHeaders headers = new HttpHeaders();
 
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -59,14 +60,14 @@ public class ScrapeService {
     }
 
     private List<Place> retrieveBusinessesFromResponse(ResponseEntity<String> response) throws JsonProcessingException {
-        if (response.getStatusCode().is2xxSuccessful()) {
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody().length() > 3) {
             log.info("Got 200 response: {}", response.getBody());
             String body = response.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             ScrapeLocationResponse locationResponse = objectMapper.readValue(body, ScrapeLocationResponse.class);
             log.info("Mapped {} objects", locationResponse.getPlaces().size());
+            //System.out.println(locationResponse.getPlaces() + "JOOOOOGGAHHH");
             return locationResponse.getPlaces();
-            //System.out.println(locationResponse.getPlaces());
         }
         else {
             log.info("Got 500 response: {}", response.getBody());
@@ -77,7 +78,15 @@ public class ScrapeService {
     private void saveBusinesses(List<Place> places) {
         log.info("Saving places...");
         Business business;
+        if (places == null || places.isEmpty()) {
+            log.info("No places found while saving");
+            return;
+        }
         for (Place place : places) {
+            if (place == null) {
+                log.info("Place is null");
+                continue;
+            }
             List<BusinessType> types = new ArrayList<>();
             business = new Business(place);
             for (String type : place.getTypes()) {
@@ -99,21 +108,59 @@ public class ScrapeService {
         }
     }
 
+    @Transactional
     public void deleteRepeatedBusinesses() {
         log.info("Deleting repeated businesses...");
         List<Business> businesses = businessRepository.findAll();
         HashMap<String, String> uniqueBusinesses = new HashMap<>();
         for (Business business : businesses) {
             if (uniqueBusinesses.containsKey(business.getName())) {
-                if (business.getGoogleMapsUrl() == uniqueBusinesses.get(business.getName())) {
-                    log.info("Deleting repeated business: {}", business.getName());
-                    businessRepository.delete(business);
-                }
+                log.info("Deleting repeated business: {}", business.getName());
+                uniqueBusinesses.put(business.getName(), business.getGoogleMapsUrl());
+                businessRepository.delete(business);
             }
             else {
                 uniqueBusinesses.put(business.getName(), business.getGoogleMapsUrl());
             }
         }
         log.info("Deleted repeated businesses: {} deleted, {} initial, {} left", businesses.size() - uniqueBusinesses.size(), businesses.size(), uniqueBusinesses.size());
+    }
+
+    public void scrapeArea(ScrapeAreaRequest request) throws JsonProcessingException {
+        Point center = new Point(request.getCenterLongitude(), request.getCenterLatitude());
+        Double eastBound = center.shift(request.getAreaWidth() / 2.0, 0.0).getLatitude();
+        Double westBound = center.shift(request.getAreaWidth() / -2.0, 0.0).getLatitude();
+        Double northBound = center.shift(0.0, request.getCenterLongitude() / 2.0).getLongitude();
+        Double southBound = center.shift(0.0, request.getCenterLongitude() / -2.0).getLongitude();
+        log.info("Calculated area bounds: west = {}, east = {}, north = {}, south = {}", westBound, eastBound, northBound, southBound);
+//
+//        Double latPointer = westBound;
+//        Double longPointer = northBound;
+        int latResetCounter = 0;
+        int iterationCounter = 0;
+
+        Voxel voxel = new Voxel(westBound, southBound, 1.0, 20, request.getIncludedTypes());
+
+        while (voxel.getLongitude() < northBound) {
+            log.info("Iteraton by Y {}", latResetCounter);
+            while(voxel.getLatitude() < eastBound) {
+                searchNearby(new ScrapeRequest(voxel));
+                log.info("Old latitude = {}", voxel.getLatitude());
+                voxel.setLatitude(voxel.shiftLatitude(1.0));
+                log.info("New latitude = {}", voxel.getLatitude());
+                iterationCounter++;
+                log.info("Iteration by X {}: voxel latitude = {}, voxel longitude = {}, east bound = {}", iterationCounter, voxel.getLatitude(), voxel.getLongitude(), eastBound);
+            }
+            log.warn("REsetting Lat");
+            voxel.setLatitude(westBound);
+            if (latResetCounter % 2 == 0) {
+                voxel.setLatitude(voxel.shiftLatitude(0.5));
+            }
+            latResetCounter++;
+            log.info("Old long = {}", voxel.getLongitude());
+            voxel.setLongitude(voxel.shiftLongitude(0.5));
+            log.info("New long = {}", voxel.getLongitude());
+        }
+        log.info("Scraping complete!");
     }
 }

@@ -3,6 +3,7 @@ package runly.online.bizscraper.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import runly.online.bizscraper.dto.ScrapeAreaRequest;
 import runly.online.bizscraper.dto.ScrapeNearbyRequest;
 import runly.online.bizscraper.dto.ScrapeRequest;
 import runly.online.bizscraper.service.ScrapeService;
@@ -21,8 +22,7 @@ public class ScrapeController {
     @PostMapping("/scrape/nearby")
     public void scrapeNearby(@RequestBody ScrapeNearbyRequest nearbyRequest) throws JsonProcessingException {
         log.info("scrape request: {}, {} results", nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());
-        ScrapeRequest request = new ScrapeRequest(nearbyRequest.getLatitude(), nearbyRequest.getLongitude(),
-                nearbyRequest.getRadiusKm()*1000, nearbyRequest.getIncludedTypes(), nearbyRequest.getMaxResultCount());
+        ScrapeRequest request = new ScrapeRequest(nearbyRequest);
         scrapeService.searchNearby(request);
     }
 
@@ -30,5 +30,11 @@ public class ScrapeController {
     public void deleteRepeated() {
         log.info("Accepted delete repeated request");
         scrapeService.deleteRepeatedBusinesses();
+    }
+
+    @PostMapping("/scrape/area")
+    public void scrapeArea(@RequestBody ScrapeAreaRequest request) throws JsonProcessingException {
+        log.info("Accepted scrape area request");
+        scrapeService.scrapeArea(request);
     }
 }

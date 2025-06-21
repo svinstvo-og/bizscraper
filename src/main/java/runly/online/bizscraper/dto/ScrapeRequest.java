@@ -16,15 +16,26 @@ public class ScrapeRequest {
     private int maxResultCount;
     private LocationRestriction locationRestriction;
 
-    public ScrapeRequest(double latitude, double longitude, Double radius, List<String> types, int maxResultCount) {
-        this.includedTypes = types;
-        this.maxResultCount = maxResultCount;
+    public ScrapeRequest(ScrapeNearbyRequest request) {
+        this.includedTypes = request.getIncludedTypes();
+        this.maxResultCount = request.getMaxResultCount();
 
         Map<String, Double> circle = new HashMap<>();
-        circle.put("latitude", latitude);
-        circle.put("longitude", longitude);
+        circle.put("latitude", request.getLatitude());
+        circle.put("longitude", request.getLongitude());
 
-        this.locationRestriction = new LocationRestriction(new Circle(circle, radius));
+        this.locationRestriction = new LocationRestriction(new Circle(circle, request.getRadiusKm()*1000));
+    }
+
+    public ScrapeRequest(Voxel voxel) {
+        this.includedTypes = voxel.getIncludedTypes();
+        this.maxResultCount = 20;
+
+        Map<String, Double> circle = new HashMap<>();
+        circle.put("latitude", voxel.getLatitude());
+        circle.put("longitude", voxel.getLongitude());
+
+        this.locationRestriction = new LocationRestriction(new Circle(circle, 1000.0));
     }
 }
 
