@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import runly.online.bizscraper.model.Business;
 import runly.online.bizscraper.repository.BusinessRepository;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,5 +36,19 @@ public class OutreachService {
         map.put(business.getId(), business.getWebsiteUrl());
         business.setStatus("forming_email");
         return map;
+    }
+
+    public Business verifyBusiness(Long id) {
+        log.info("Verifying business {}...", id);
+        return businessRepository.findById(id).get();
+    }
+
+    @Transactional
+    public void changeStatus(Business business, String emailBody) {
+        log.info("Changing status of business {}", business.getName());
+        business.setStatus("email-sent");
+        business.setEmailSent(true);
+        business.setEmailBody(emailBody);
+        business.setSentAt(LocalDateTime.now());
     }
 }
