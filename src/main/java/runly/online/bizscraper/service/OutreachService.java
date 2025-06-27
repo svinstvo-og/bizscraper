@@ -51,4 +51,8 @@ public class OutreachService {
         business.setEmailBody(emailBody);
         business.setSentAt(LocalDateTime.now());
     }
+
+    public void formEmail() {
+        log.info("Forming email...");
+    }
 }

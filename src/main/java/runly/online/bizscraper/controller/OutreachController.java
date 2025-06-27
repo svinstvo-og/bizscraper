@@ -33,4 +33,9 @@ public class OutreachController {
         Business business = outreachService.verifyBusiness(request.getId());
         outreachService.changeStatus(business, request.getEmailBody());
     }
+
+    @PostMapping
+    public void outreach() {
+        outreachService.formEmail();
+    }
 }

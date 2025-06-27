@@ -37,4 +37,11 @@ public class ScrapeController {
         log.info("Accepted scrape area request");
         scrapeService.scrapeArea(request);
     }
+
+    @DeleteMapping("/no-url")
+    public void deleteWebsiteless() {
+        log.info("Accepted delete websiteless request");
+        scrapeService.deleteWebsiteless();
+        log.info("Deleting websiteless businesses completed");
+    }
 }
