@@ -30,7 +30,7 @@ public class Business {
     private String status;
     private Boolean emailSent;
     private LocalDateTime sentAt;
-    private String emailBody;
+    private LocalDateTime updatedAt;
     private String country;
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)

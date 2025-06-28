@@ -45,11 +45,10 @@ public class OutreachService {
     }
 
     @Transactional
-    public void changeStatus(Business business, String emailBody) {
+    public void emailSent(Business business) {
         log.info("Changing status of business {}", business.getName());
         business.setStatus("EMAIL-SENT");
         business.setEmailSent(true);
-        business.setEmailBody(emailBody);
         business.setSentAt(LocalDateTime.now());
     }
 

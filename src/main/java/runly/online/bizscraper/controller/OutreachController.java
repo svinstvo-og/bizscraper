@@ -35,11 +35,11 @@ public class OutreachController {
         return business;
     }
 
-    @PatchMapping("/business/email/sent")
-    public void emailSent(@RequestBody EmailSentRequest request) {
-        log.info("Email sent request to business with id: {}", request.toString());
-        Business business = outreachService.verifyBusiness(request.getId());
-        outreachService.changeStatus(business, request.getEmailBody());
+    @PatchMapping("/email/{businessId}/sent")
+    public void emailSent(@PathVariable Long businessId) {
+        log.info("Email sent request to business with id: {}", businessId);
+        Business business = outreachService.verifyBusiness(businessId);
+        outreachService.emailSent(business);
     }
 
     @PostMapping
@@ -63,5 +63,12 @@ public class OutreachController {
         Long id = anyId.keySet().iterator().next();
         Business business = outreachService.validateBusiness(id);
         requestService.generateEmail(id, business.getWebsiteUrl(), business.getCountry());
+    }
+
+    @PatchMapping("/email/{businessId}/failed")
+    public void emailFailed(@PathVariable Long businessId) {
+        log.info("Email for business id {} failed", businessId);
+        Business business = outreachService.verifyBusiness(businessId);
+        outreachService.updateStatus(business, "FAILED");
     }
 }
