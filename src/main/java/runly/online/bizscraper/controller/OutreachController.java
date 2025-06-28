@@ -37,5 +37,14 @@ public class OutreachController {
     @PostMapping
     public void outreach() {
         outreachService.formEmail();
+        //TODO
+    }
+
+    @PatchMapping("/{businessId}/{status}")
+    public void updateStatus(@PathVariable Long businessId, @PathVariable String status) {
+        log.info("Updating status of business with id: {}", businessId);
+        Business business = outreachService.validateBusiness(businessId);
+        outreachService.updateStatus(business, status);
+        log.info("Updated status of business with id: {}", businessId);
     }
 }

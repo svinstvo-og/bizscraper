@@ -9,6 +9,7 @@ import runly.online.bizscraper.repository.BusinessRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,7 +47,7 @@ public class OutreachService {
     @Transactional
     public void changeStatus(Business business, String emailBody) {
         log.info("Changing status of business {}", business.getName());
-        business.setStatus("email-sent");
+        business.setStatus("EMAIL-SENT");
         business.setEmailSent(true);
         business.setEmailBody(emailBody);
         business.setSentAt(LocalDateTime.now());
@@ -54,5 +55,22 @@ public class OutreachService {
 
     public void formEmail() {
         log.info("Forming email...");
+        //TODO
+    }
+
+    public Business validateBusiness(Long id) {
+        log.info("Validating business {}", id);
+        Optional<Business> business = businessRepository.findById(id);
+        if (business.isPresent()) {
+            log.info("Found business {}", business.get().getName());
+            return business.get();
+        }
+        throw new RuntimeException("Business not found");
+    }
+
+    @Transactional
+    public void updateStatus(Business business, String status) {
+        log.info("Updating status of business {}", business.getName());
+        business.setStatus(status);
     }
 }
