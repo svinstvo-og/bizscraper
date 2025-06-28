@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import runly.online.bizscraper.dto.EmailSentRequest;
 import runly.online.bizscraper.model.Business;
+import runly.online.bizscraper.repository.BusinessRepository;
 import runly.online.bizscraper.service.OutreachService;
+import runly.online.bizscraper.service.RequestService;
 
 import java.util.Map;
 
@@ -17,17 +19,23 @@ public class OutreachController {
     final
     OutreachService outreachService;
 
-    public OutreachController(OutreachService outreachService) {
+    final
+    RequestService requestService;
+    private final BusinessRepository businessRepository;
+
+    public OutreachController(OutreachService outreachService, RequestService requestService, BusinessRepository businessRepository) {
         this.outreachService = outreachService;
+        this.requestService = requestService;
+        this.businessRepository = businessRepository;
     }
 
     @PatchMapping("/business/any")
     public Map<Long, String> any() {
-        Map<Long, String> business = outreachService.any();
+        Map<Long, String> business = outreachService.getAny();
         return business;
     }
 
-    @PatchMapping("/business/email-sent")
+    @PatchMapping("/business/email/sent")
     public void emailSent(@RequestBody EmailSentRequest request) {
         log.info("Email sent request to business with id: {}", request.toString());
         Business business = outreachService.verifyBusiness(request.getId());
@@ -46,5 +54,14 @@ public class OutreachController {
         Business business = outreachService.validateBusiness(businessId);
         outreachService.updateStatus(business, status);
         log.info("Updated status of business with id: {}", businessId);
+    }
+
+    @PatchMapping("/email/single")
+    public void sendSingleEmail() {
+        log.info("Sending single email");
+        Map<Long, String> anyId = outreachService.getAny();
+        Long id = anyId.keySet().iterator().next();
+        Business business = outreachService.validateBusiness(id);
+        requestService.generateEmail(id, business.getWebsiteUrl(), business.getCountry());
     }
 }

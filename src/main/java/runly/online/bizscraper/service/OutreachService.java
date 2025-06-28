@@ -24,7 +24,7 @@ public class OutreachService {
     }
 
     @Transactional
-    public Map<Long, String> any() {
+    public Map<Long, String> getAny() {
         Business business = businessRepository.findById(businessRepository.findAnyPending()).get();
         log.info("Found {} business", business.getName());
         while (business.getWebsiteUrl() == null) {
