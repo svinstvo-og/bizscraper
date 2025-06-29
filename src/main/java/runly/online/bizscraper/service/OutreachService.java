@@ -35,7 +35,7 @@ public class OutreachService {
         }
         Map<Long, String> map = new HashMap<>();
         map.put(business.getId(), business.getWebsiteUrl());
-        business.setStatus("forming_email");
+        //business.setStatus("forming_email");
         return map;
     }
 

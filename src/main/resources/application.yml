@@ -16,3 +16,9 @@ spring:
 google:
   api:
     key: ${GOOGLE_PLACES_API_KEY}
+
+zoho:
+  api:
+    refresh-token: ${ZOHO_REFRESH_TOKEN}
+    client-id: "1000.SXTTSP1TEF41IA9WKLTL8EVX7LR1AZ"
+    client-secret: ${ZOHO_CLIENT_SECRET}
