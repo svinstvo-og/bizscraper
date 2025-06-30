@@ -8,6 +8,7 @@ import runly.online.bizscraper.model.Business;
 import runly.online.bizscraper.repository.BusinessRepository;
 import runly.online.bizscraper.service.OutreachService;
 import runly.online.bizscraper.service.RequestService;
+import runly.online.bizscraper.service.ZohoTokenService;
 
 import java.util.Map;
 
@@ -22,11 +23,14 @@ public class OutreachController {
     final
     RequestService requestService;
     private final BusinessRepository businessRepository;
+    private final ZohoTokenService zohoTokenService;
 
-    public OutreachController(OutreachService outreachService, RequestService requestService, BusinessRepository businessRepository) {
+    public OutreachController(OutreachService outreachService, RequestService requestService,
+                              BusinessRepository businessRepository, ZohoTokenService zohoTokenService) {
         this.outreachService = outreachService;
         this.requestService = requestService;
         this.businessRepository = businessRepository;
+        this.zohoTokenService = zohoTokenService;
     }
 
     @PatchMapping("/business/any")
@@ -70,5 +74,12 @@ public class OutreachController {
         log.info("Email for business id {} failed", businessId);
         Business business = outreachService.verifyBusiness(businessId);
         outreachService.updateStatus(business, "FAILED");
+    }
+
+    @GetMapping("/test/email/bearer")
+    public String getBearer() {
+        String bearer = zohoTokenService.getBearer();
+        log.info("Bearer: {}", bearer);
+        return bearer;
     }
 }
