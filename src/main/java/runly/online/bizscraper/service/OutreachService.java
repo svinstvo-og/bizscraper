@@ -88,34 +88,43 @@ public class OutreachService {
         business.setStatus(status);
     }
 
-    @Transactional
     public void outreach(List<Business> businesses) {
         int i = 0;
-        ResponseEntity<EmailGeneratedResponse> responseEntity;
-        EmailGeneratedResponse response = new EmailGeneratedResponse();
         for (Business business : businesses) {
-            log.info("#{}, Outreaching business {}...",++i, business.getName());
-            responseEntity = requestService.generateEmail(business.getId(), business.getWebsiteUrl(), business.getCountry());
-            if (responseEntity.getStatusCode().value() == 200) {
-                if (responseEntity.getBody() == null) {
-                    log.warn("Email sending error for {}", business.getName());
-                    updateStatus(business, "EMAIL-SENDING-ERROR");
-                    continue;
-                }
-                response = responseEntity.getBody();
-                int statusCode = emailService.sendEmail(response.getEmail(), response.getSubject(), response.getBody());
-                if (statusCode == 200) {
-                    emailSent(business, response.getEmail());
-                }
-                else {
-                    log.warn("Email sending error for {}", business.getName());
-                    updateStatus(business, "EMAIL-SENDING-ERROR");
-                }
+            try {
+                log.info("#{}, Outreaching business {}...", ++i, business.getName());
+                processSingleBusiness(business);
+            } catch (Exception e) {
+                log.error("Failed to process business {}: {}", business.getName(), e.getMessage(), e);
+                // Optionally: mark business as 'PROCESSING-FAILED'
+                updateStatus(business, "PROCESSING-FAILED");
             }
-            else if (responseEntity.getStatusCode().value() == 204) {
-                log.warn("{} email not found", business.getName());
-                updateStatus(business, "NO-EMAIL-FOUND");
+        }
+    }
+
+    @Transactional
+    public void processSingleBusiness(Business business) {
+        ResponseEntity<EmailGeneratedResponse> responseEntity =
+                requestService.generateEmail(business.getId(), business.getWebsiteUrl(), business.getCountry());
+
+        if (responseEntity.getStatusCode().value() == 200) {
+            EmailGeneratedResponse response = responseEntity.getBody();
+            if (response == null) {
+                updateStatus(business, "EMAIL-SENDING-ERROR");
+                return;
             }
+
+            int statusCode = emailService.sendEmail(response.getEmail(), response.getSubject(), response.getBody());
+            if (statusCode == 200) {
+                emailSent(business, response.getEmail());
+            } else {
+                updateStatus(business, "EMAIL-SENDING-ERROR");
+            }
+
+        } else if (responseEntity.getStatusCode().value() == 204) {
+            updateStatus(business, "NO-EMAIL-FOUND");
+        } else {
+            updateStatus(business, "EMAIL-SENDING-ERROR");
         }
     }
 }
