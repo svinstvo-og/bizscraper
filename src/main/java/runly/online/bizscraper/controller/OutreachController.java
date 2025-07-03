@@ -11,6 +11,7 @@ import runly.online.bizscraper.service.OutreachService;
 import runly.online.bizscraper.service.RequestService;
 import runly.online.bizscraper.service.ZohoTokenService;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -49,10 +50,11 @@ public class OutreachController {
         outreachService.emailSent(business);
     }
 
-    @PostMapping
-    public void outreach() {
-        outreachService.formEmail();
-        //TODO
+    @PatchMapping("/{count}")
+    public void outreach(@PathVariable int count) {
+        log.info("Outreaching {} businesses", count);
+        List<Business> businesses = outreachService.getPendingBusinesses(count);
+        //outreachService.outreach(count);
     }
 
     @PatchMapping("/{businessId}/{status}")

@@ -1,6 +1,7 @@
 package runly.online.bizscraper.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import runly.online.bizscraper.model.Business;
@@ -8,6 +9,7 @@ import runly.online.bizscraper.repository.BusinessRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,6 +39,15 @@ public class OutreachService {
         map.put(business.getId(), business.getWebsiteUrl());
         //business.setStatus("forming_email");
         return map;
+    }
+
+    @Transactional
+    public List<Business> getPendingBusinesses(int count) {
+        List<Business> businesses = businessRepository.findTopNByStatus("pending", PageRequest.of(0, count));
+        for (Business business : businesses) {
+            log.info("Found {} business", business.getName());
+        }
+        return businesses;
     }
 
     public Business verifyBusiness(Long id) {
@@ -71,5 +82,12 @@ public class OutreachService {
     public void updateStatus(Business business, String status) {
         log.info("Updating status of business {}", business.getName());
         business.setStatus(status);
+    }
+
+    public void outreach(Long count) {
+        for (int i = 0; i < count; i++) {
+
+            log.info("Outreaching to business: {}", count);
+        }
     }
 }
