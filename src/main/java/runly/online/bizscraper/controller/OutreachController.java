@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import runly.online.bizscraper.dto.EmailSentRequest;
 import runly.online.bizscraper.model.Business;
 import runly.online.bizscraper.repository.BusinessRepository;
+import runly.online.bizscraper.service.EmailService;
 import runly.online.bizscraper.service.OutreachService;
 import runly.online.bizscraper.service.RequestService;
 import runly.online.bizscraper.service.ZohoTokenService;
@@ -24,13 +25,15 @@ public class OutreachController {
     RequestService requestService;
     private final BusinessRepository businessRepository;
     private final ZohoTokenService zohoTokenService;
+    private final EmailService emailService;
 
     public OutreachController(OutreachService outreachService, RequestService requestService,
-                              BusinessRepository businessRepository, ZohoTokenService zohoTokenService) {
+                              BusinessRepository businessRepository, ZohoTokenService zohoTokenService, EmailService emailService) {
         this.outreachService = outreachService;
         this.requestService = requestService;
         this.businessRepository = businessRepository;
         this.zohoTokenService = zohoTokenService;
+        this.emailService = emailService;
     }
 
     @PatchMapping("/business/any")
@@ -81,5 +84,11 @@ public class OutreachController {
         String bearer = zohoTokenService.getBearer();
         log.info("Bearer: {}", bearer);
         return bearer;
+    }
+
+    @PostMapping("/test/email")
+    public void sendTestEmail() {
+        log.info("Sending test email");
+        emailService.sendEmail("zalupa@gmail.com", "Ahoj", "Loshara");
     }
 }

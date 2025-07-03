@@ -10,5 +10,5 @@ public class SendEmailRequest {
     private String fromAddress;
     private String toAddress;
     private String subject;
-    private String body;
+    private String content;
 }

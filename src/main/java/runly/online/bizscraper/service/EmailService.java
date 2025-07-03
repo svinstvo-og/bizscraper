@@ -14,8 +14,7 @@ import runly.online.bizscraper.dto.SendEmailRequest;
 public class EmailService {
 
     private final ZohoTokenService zohoTokenService;
-
-    private
+    private static final String accountId = "20107151552";
 
     public EmailService(ZohoTokenService zohoTokenService) {
         this.zohoTokenService = zohoTokenService;
@@ -25,15 +24,17 @@ public class EmailService {
             .baseUrl("https://mail.zoho.eu/api")
             .build();
 
-    public int sendEmail(String accountId, String accessToken, String toAddress, String subject, String body) {
+    public int sendEmail(String toAddress, String subject, String body) {
         try {
             log.info("Sending email via Zoho Mail API to: {}", toAddress);
 
             SendEmailRequest request = new SendEmailRequest("support@runly.online", toAddress, subject, body);
+            String accessToken = zohoTokenService.getBearer();
 
             ResponseEntity<Void> response = zohoMailClient
                     .post()
-                    .uri("/accounts/{accountId}/messages", accountId)
+                    .uri("/accounts/6950843000000002002/messages")
+                    //.uri("/accounts/{accountId}/messages", accountId)
                     .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .header(HttpHeaders.AUTHORIZATION, "Zoho-oauthtoken " + accessToken)
@@ -47,6 +48,7 @@ public class EmailService {
 
         } catch (RestClientException e) {
             log.error("Failed to send email via Zoho Mail API: {}", e.getMessage());
+            zohoTokenService.refreshToken();
             throw new RuntimeException("Email sending failed", e);
         }
     }

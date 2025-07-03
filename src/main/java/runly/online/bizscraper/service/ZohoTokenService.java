@@ -34,7 +34,7 @@ public class ZohoTokenService {
         return bearer;
     }
 
-    private ZohoTokenResponse refreshToken() {
+    public ZohoTokenResponse refreshToken() {
         try {
             log.info("Refreshing Zoho access token");
 
