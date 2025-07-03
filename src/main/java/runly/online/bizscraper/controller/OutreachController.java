@@ -47,14 +47,14 @@ public class OutreachController {
     public void emailSent(@PathVariable Long businessId) {
         log.info("Email sent request to business with id: {}", businessId);
         Business business = outreachService.verifyBusiness(businessId);
-        outreachService.emailSent(business);
+        outreachService.emailSent(business, business.getEmail()); //govno
     }
 
     @PatchMapping("/{count}")
     public void outreach(@PathVariable int count) {
         log.info("Outreaching {} businesses", count);
         List<Business> businesses = outreachService.getPendingBusinesses(count);
-        //outreachService.outreach(count);
+        outreachService.outreach(businesses);
     }
 
     @PatchMapping("/{businessId}/{status}")

@@ -2,8 +2,10 @@ package runly.online.bizscraper.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import runly.online.bizscraper.dto.EmailGeneratedResponse;
 import runly.online.bizscraper.model.Business;
 import runly.online.bizscraper.repository.BusinessRepository;
 
@@ -17,12 +19,14 @@ import java.util.Optional;
 @Service
 public class OutreachService {
 
-    final
-    BusinessRepository businessRepository;
+    final BusinessRepository businessRepository;
+    final EmailService emailService;
+    final RequestService requestService;
 
-
-    public OutreachService(BusinessRepository businessRepository) {
+    public OutreachService(BusinessRepository businessRepository, RequestService requestService, EmailService emailService) {
         this.businessRepository = businessRepository;
+        this.requestService = requestService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -44,9 +48,9 @@ public class OutreachService {
     @Transactional
     public List<Business> getPendingBusinesses(int count) {
         List<Business> businesses = businessRepository.findTopNByStatus("pending", PageRequest.of(0, count));
-        for (Business business : businesses) {
-            log.info("Found {} business", business.getName());
-        }
+//        for (Business business : businesses) {
+//            log.info("Found {} business", business.getName());
+//        }
         return businesses;
     }
 
@@ -56,8 +60,8 @@ public class OutreachService {
     }
 
     @Transactional
-    public void emailSent(Business business) {
-        log.info("Changing status of business {}", business.getName());
+    public void emailSent(Business business, String email) {
+        log.info("Changing status of business {}, email sent successfully", business.getName());
         business.setStatus("EMAIL-SENT");
         business.setEmailSent(true);
         business.setSentAt(LocalDateTime.now());
@@ -84,10 +88,34 @@ public class OutreachService {
         business.setStatus(status);
     }
 
-    public void outreach(Long count) {
-        for (int i = 0; i < count; i++) {
-
-            log.info("Outreaching to business: {}", count);
+    @Transactional
+    public void outreach(List<Business> businesses) {
+        int i = 0;
+        ResponseEntity<EmailGeneratedResponse> responseEntity;
+        EmailGeneratedResponse response = new EmailGeneratedResponse();
+        for (Business business : businesses) {
+            log.info("#{}, Outreaching business {}...",++i, business.getName());
+            responseEntity = requestService.generateEmail(business.getId(), business.getWebsiteUrl(), business.getCountry());
+            if (responseEntity.getStatusCode().value() == 200) {
+                if (responseEntity.getBody() == null) {
+                    log.warn("Email sending error for {}", business.getName());
+                    updateStatus(business, "EMAIL-SENDING-ERROR");
+                    continue;
+                }
+                response = responseEntity.getBody();
+                int statusCode = emailService.sendEmail(response.getEmail(), response.getSubject(), response.getBody());
+                if (statusCode == 200) {
+                    emailSent(business, response.getEmail());
+                }
+                else {
+                    log.warn("Email sending error for {}", business.getName());
+                    updateStatus(business, "EMAIL-SENDING-ERROR");
+                }
+            }
+            else if (responseEntity.getStatusCode().value() == 204) {
+                log.warn("{} email not found", business.getName());
+                updateStatus(business, "NO-EMAIL-FOUND");
+            }
         }
     }
 }
