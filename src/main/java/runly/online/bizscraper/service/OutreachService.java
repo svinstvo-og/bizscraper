@@ -10,10 +10,7 @@ import runly.online.bizscraper.model.Business;
 import runly.online.bizscraper.repository.BusinessRepository;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -23,10 +20,13 @@ public class OutreachService {
     final EmailService emailService;
     final RequestService requestService;
 
+    static Set<String> seenEmails = new HashSet<>();
+
     public OutreachService(BusinessRepository businessRepository, RequestService requestService, EmailService emailService) {
         this.businessRepository = businessRepository;
         this.requestService = requestService;
         this.emailService = emailService;
+        seenEmails = businessRepository.findDistinctEmails();
     }
 
     @Transactional
@@ -63,6 +63,7 @@ public class OutreachService {
     public void emailSent(Business business, String email) {
         log.info("Changing status of business {}, email sent successfully", business.getName());
         business.setStatus("EMAIL-SENT");
+        business.setEmail(email);
         business.setEmailSent(true);
         business.setSentAt(LocalDateTime.now());
     }
@@ -89,6 +90,7 @@ public class OutreachService {
     }
 
     public void outreach(List<Business> businesses) {
+        log.info("Seen {} emails", seenEmails.size());
         int i = 0;
         for (Business business : businesses) {
             try {
@@ -97,7 +99,8 @@ public class OutreachService {
             } catch (Exception e) {
                 log.error("Failed to process business {}: {}", business.getName(), e.getMessage(), e);
                 // Optionally: mark business as 'PROCESSING-FAILED'
-                updateStatus(business, "PROCESSING-FAILED");
+                business.setStatus("PROCESSING-FAILED");
+                business.setUpdatedAt(LocalDateTime.now());
             }
         }
     }
@@ -109,22 +112,35 @@ public class OutreachService {
 
         if (responseEntity.getStatusCode().value() == 200) {
             EmailGeneratedResponse response = responseEntity.getBody();
-            if (response == null) {
-                updateStatus(business, "EMAIL-SENDING-ERROR");
+            if (response == null || seenEmails.contains(business.getName()) || !response.getEmail().contains("@")) {
+                business.setStatus("EMAIL-SENDING-ERROR");
+                business.setUpdatedAt(LocalDateTime.now());
+                businessRepository.save(business);
                 return;
             }
 
             int statusCode = emailService.sendEmail(response.getEmail(), response.getSubject(), response.getBody());
             if (statusCode == 200) {
-                emailSent(business, response.getEmail());
+                business.setStatus("EMAIL-SENT");
+                business.setUpdatedAt(LocalDateTime.now());
+                business.setEmailSent(true);
+                business.setEmail(response.getEmail());
+                businessRepository.save(business);
+                seenEmails.add(response.getEmail());
             } else {
-                updateStatus(business, "EMAIL-SENDING-ERROR");
+                business.setStatus("PROCESSING-FAILED");
+                business.setUpdatedAt(LocalDateTime.now());
+                businessRepository.save(business);
             }
 
         } else if (responseEntity.getStatusCode().value() == 204) {
-            updateStatus(business, "NO-EMAIL-FOUND");
+            business.setStatus("NO-EMAIL-FOUND");
+            business.setUpdatedAt(LocalDateTime.now());
+            businessRepository.save(business);
         } else {
-            updateStatus(business, "EMAIL-SENDING-ERROR");
+            business.setStatus("EMAIL-SENDING-ERROR");
+            business.setUpdatedAt(LocalDateTime.now());
+            businessRepository.save(business);
         }
     }
 }

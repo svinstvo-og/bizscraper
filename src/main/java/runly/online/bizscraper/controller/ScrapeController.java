@@ -44,4 +44,16 @@ public class ScrapeController {
         scrapeService.deleteWebsiteless();
         log.info("Deleting websiteless businesses completed");
     }
+
+    @DeleteMapping("/pending")
+    public void deletePending() {
+        log.info("Accepted delete pending request");
+        scrapeService.deletePending();
+    }
+
+    @DeleteMapping("/region/{region}")
+    public void deleteByRegion(@PathVariable String region) {
+        log.info("Accepted delete region request");
+        scrapeService.deleteByRegion(region);
+    }
 }

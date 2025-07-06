@@ -103,8 +103,13 @@ public class ScrapeService {
                 business.setTypes(types);
             }
             log.info("Assigned {} types to {}", types.size(), business.getName());
-            businessRepository.save(business);
-            log.info("Saved business: {}", place.getDisplayName().get("text"));
+            try {
+                businessRepository.save(business);
+                log.info("Saved business: {}", place.getDisplayName().get("text"));
+            }
+            catch (Exception e) {
+                log.error("Error while saving business: {}", e.getMessage());
+            }
         }
     }
 
@@ -124,6 +129,18 @@ public class ScrapeService {
             }
         }
         log.info("Deleted repeated businesses: {} deleted, {} initial, {} left", businesses.size() - uniqueBusinesses.size(), businesses.size(), uniqueBusinesses.size());
+    }
+
+    public void deleteByRegion(String region) {
+        log.info("Deleting repeated businesses by region: {}", region);
+        int counter = 0;
+        List<Business> businesses = businessRepository.findByCountry(region);
+        for (Business business : businesses) {
+            log.info("Deleting business: {}", business.getName());
+            businessRepository.delete(business);
+            counter++;
+        }
+        log.info("Deleted {} businesses by region: {}",counter , region);
     }
 
     public void scrapeArea(ScrapeAreaRequest request) throws JsonProcessingException {
@@ -172,6 +189,22 @@ public class ScrapeService {
         for (Business business : businesses) {
             if (business.getWebsiteUrl() == null || business.getWebsiteUrl().isEmpty()) {
                 log.info("Deleting websiteless business: {}", business.getName());
+                businessRepository.delete(business);
+                deletedBusinesses++;
+            }
+        }
+        log.info("Businesses deleted: {}, initial business count: {}, business count after the operation: {}", deletedBusinesses, initialBusinesses
+                , initialBusinesses - deletedBusinesses);
+    }
+
+    @Transactional
+    public void deletePending() {
+        List<Business> businesses = businessRepository.findAll();
+        int initialBusinesses = businesses.size();
+        int deletedBusinesses = 0;
+        for (Business business : businesses) {
+            if (Objects.equals(business.getStatus(), "pending")) {
+                log.info("Deleting pending business: {}", business.getName());
                 businessRepository.delete(business);
                 deletedBusinesses++;
             }
